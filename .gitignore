@@ -1,0 +1,73 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.qodo/
+.sixth/
+
+# Python / Backend
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+dev.db
+*.sqlite
+backend/storage/
+backend/models/
+backend/dev.db
+voice-crafter/backend/storage/
+voice-crafter/backend/models/
+voice-crafter/backend/dev.db
+voice-crafter/backend/.venv/
+
+# Env files (keep example)
+.env
+.env.*
+!.env.example
+
+# Zip and build files
+*.zip
+*.tar.gz
+*.rar
+
+# Specific Markdown and files to hide as requested
+# User requested hiding .md files (we will hide the non-essential ones in root)
+AI_AGENT_PROMPT.md
+WORKLOG.md
+RUN.md
+minimalist-3d-designer.skill

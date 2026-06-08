@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice-Crafter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070f;
+      --bg2: #0d1020;
+      --panel: rgba(17, 20, 40, 0.88);
+      --panel-strong: rgba(25, 28, 56, 0.92);
+      --line: rgba(155, 114, 255, 0.18);
+      --line2: rgba(0, 229, 255, 0.18);
+      --text: #eef0ff;
+      --muted: #8a91b8;
+      --accent: #9b72ff;
+      --accent2: #00e5ff;
+      --danger: #ff6b6b;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(155, 114, 255, 0.16), transparent 35%),
+        radial-gradient(circle at top right, rgba(0, 229, 255, 0.09), transparent 28%),
+        linear-gradient(180deg, #07070f 0%, #090b16 42%, #05060c 100%);
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+
+    .noise {
+      position: fixed; inset: 0; pointer-events: none; opacity: 0.2;
+      background-image: radial-gradient(rgba(255,255,255,0.14) 0.5px, transparent 0.5px);
+      background-size: 18px 18px;
+      -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.65), transparent 95%);
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.65), transparent 95%);
+    }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      -webkit-backdrop-filter: blur(22px);
+      backdrop-filter: blur(22px);
+      background: rgba(7, 7, 15, 0.68);
+      border-bottom: 1px solid rgba(155, 114, 255, 0.12);
+    }
+
+    .topbar-inner {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      min-height: 76px; padding: 0 0;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(155,114,255,0.2), rgba(0,229,255,0.16));
+      border: 1px solid rgba(255,255,255,0.08);
+      display: grid; place-items: center; box-shadow: 0 0 30px rgba(155, 114, 255, 0.12);
+    }
+    .brand h1 {
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem; line-height: 1; letter-spacing: -0.03em;
+    }
+    .brand p { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+    .actions { display: flex; align-items: center; gap: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      min-height: 44px; padding: 0 18px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.1); font-weight: 700; font-size: 0.93rem;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,0.03); color: var(--text); }
+    .btn-ghost:hover { border-color: rgba(155,114,255,0.4); box-shadow: 0 14px 30px rgba(0,0,0,0.16); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #6b4ee6 55%, #5b32d6 100%);
+      border-color: transparent; color: white; box-shadow: 0 18px 40px rgba(155,114,255,0.22);
+    }
+    .btn-primary:hover { box-shadow: 0 22px 48px rgba(155,114,255,0.32); }
+
+    .hero {
+      position: relative; min-height: calc(100vh - 76px);
+      display: grid; align-items: center;
+      padding: 72px 0 54px;
+    }
+
+    .hero-grid {
+      display: grid; grid-template-columns: 1.12fr 0.88fr; gap: 34px; align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px; padding: 9px 14px;
+      border-radius: 999px; border: 1px solid rgba(155,114,255,0.22);
+      background: rgba(155,114,255,0.08); color: #d7cbff; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 18px rgba(0,229,255,0.55); }
+
+    h2 {
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3rem, 7vw, 5.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+    .grad {
+      background: linear-gradient(135deg, #f3efff 0%, #bfa8ff 36%, #57efff 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .lede {
+      max-width: 620px; margin: 20px 0 28px;
+      color: var(--muted); font-size: 1.04rem; line-height: 1.8;
+    }
+
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+
+    .meta-row {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      color: #cfd4f3; font-size: 0.88rem;
+    }
+    .meta-chip {
+      display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px;
+      background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .preview {
+      position: relative; padding: 22px; border-radius: 28px;
+      background: linear-gradient(180deg, rgba(17, 20, 40, 0.86), rgba(11, 14, 30, 0.94));
+      border: 1px solid rgba(155,114,255,0.18); box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .preview::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at top, rgba(155,114,255,0.14), transparent 50%);
+      pointer-events: none;
+    }
+
+    .window-bar {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 18px; padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.36); font-size: 0.8rem;
+    }
+    .window-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .red { background: #ff6b6b; }
+    .amber { background: #ffd54f; }
+    .green { background: #42e19b; }
+
+    .card {
+      padding: 18px; border-radius: 22px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+      border-radius: 999px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+      background: rgba(0,229,255,0.08); color: #9ef5ff; border: 1px solid rgba(0,229,255,0.12);
+    }
+    .tag.warn { background: rgba(255,107,107,0.08); color: #ffb0b0; border-color: rgba(255,107,107,0.14); }
+    .wave {
+      height: 64px; border-radius: 18px; margin: 14px 0;
+      background:
+        linear-gradient(180deg, rgba(155,114,255,0.14), rgba(0,229,255,0.05)),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.14) 0 4px, transparent 4px 10px);
+      position: relative; overflow: hidden;
+    }
+    .wave::after {
+      content: ''; position: absolute; inset: 18px 12px auto 12px; height: 22px;
+      background: linear-gradient(90deg, transparent, rgba(0,229,255,0.65), transparent);
+      filter: blur(8px);
+      animation: drift 2.8s linear infinite;
+    }
+    @keyframes drift { from { transform: translateX(-30%); } to { transform: translateX(30%); } }
+
+    .bars { display: grid; gap: 10px; }
+    .bar-row { display: grid; grid-template-columns: 92px 1fr 60px; align-items: center; gap: 12px; font-size: 0.84rem; color: #d9defc; }
+    .track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+    .fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .fill.redfill { background: linear-gradient(90deg, #ff6b6b, #ff8a8a); }
+    .w88 { width: 88%; }
+    .w76 { width: 76%; }
+    .w94 { width: 94%; }
+    .w92 { width: 92%; }
+    .w89 { width: 89%; }
+    .w95 { width: 95%; }
+    .ml-auto { margin-left: auto; }
+
+    .stat-grid {
+      margin-top: 26px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    }
+    .stat {
+      padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .stat strong { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; }
+    .stat span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
+
+    .section {
+      padding: 12px 0 76px;
+    }
+
+    .section-head { margin-bottom: 24px; }
+    .section-head h3 {
+      margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.8rem, 3vw, 2.7rem); letter-spacing: -0.04em;
+    }
+    .section-head p { margin: 0; max-width: 640px; color: var(--muted); line-height: 1.75; }
+
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .feature {
+      padding: 22px; border-radius: 22px; background: var(--panel-strong);
+      border: 1px solid rgba(255,255,255,0.08); box-shadow: var(--shadow);
+    }
+    .feature h4 { margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; }
+    .feature p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 0.92rem; }
+    .feature ul { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .feature li { color: #d9defc; font-size: 0.85rem; display: flex; gap: 8px; align-items: flex-start; }
+    .feature li::before { content: '•'; color: var(--accent2); }
+
+    .footer {
+      padding: 26px 0 38px; border-top: 1px solid rgba(155,114,255,0.12);
+      color: var(--muted); font-size: 0.82rem;
+    }
+    .footer-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+    .footer-links { display: flex; gap: 16px; }
+    .footer-links a:hover { color: var(--text); }
+
+    @media (max-width: 960px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner { padding: 14px 0; align-items: flex-start; flex-direction: column; }
+      .actions { width: 100%; }
+      .btn { flex: 1; }
+      .hero { padding-top: 42px; }
+      h2 { font-size: clamp(2.5rem, 12vw, 4rem); }
+      .hero-ctas { flex-direction: column; }
+      .stat-grid { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 1fr; }
+      .bar-row span:last-child { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="/">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M4 11.5C5.8 7.5 7.2 5.5 8.8 11.5C10.4 17.5 11.8 15.5 13.2 11.5C14.6 7.5 16.2 5.5 18 11.5" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="g" x1="4" y1="11" x2="18" y2="11">
+                <stop stop-color="#9B72FF"/>
+                <stop offset="1" stop-color="#00E5FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h1>Voice-Crafter</h1>
+          <p>Enterprise Voice AI Platform</p>
+        </div>
+      </a>
+      <div class="actions">
+        <a class="btn btn-ghost" href="/login">Sign in</a>
+        <a class="btn btn-primary" href="/register">Register</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="container hero-grid">
+      <section>
+        <div class="eyebrow"><span class="dot"></span> Open source, production ready</div>
+        <h2>Your voice.<br><span class="grad">Infinite</span><br>possibilities.</h2>
+        <p class="lede">Clone voices, generate speech, detect deepfakes, and manage every audio workflow in one platform. The design is intentionally focused on the two entry points the app should show first: sign in or register.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="/register">Create account</a>
+          <a class="btn btn-ghost" href="/login">Sign in</a>
+        </div>
+        <div class="meta-row">
+          <div class="meta-chip">17 languages</div>
+          <div class="meta-chip">5-model detection</div>
+          <div class="meta-chip">Streaming TTS</div>
+          <div class="meta-chip">Voice hub</div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><strong>17</strong><span>Languages supported</span></div>
+          <div class="stat"><strong>5</strong><span>Detection models in the ensemble</span></div>
+          <div class="stat"><strong>3s</strong><span>Minimum audio for cloning</span></div>
+          <div class="stat"><strong>99.7%</strong><span>Detection accuracy target</span></div>
+        </div>
+      </section>
+
+      <aside class="preview" aria-label="Voice-Crafter product preview">
+        <div class="window-bar">
+          <span class="window-dot red"></span>
+          <span class="window-dot amber"></span>
+          <span class="window-dot green"></span>
+          <span class="ml-auto">Voice-Crafter dashboard</span>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Voice generation</span>
+            <span class="tag">TTS</span>
+          </div>
+          <div class="wave"></div>
+          <div class="bars">
+            <div class="bar-row"><span>Emotion</span><div class="track"><div class="fill w88"></div></div><span>88%</span></div>
+            <div class="bar-row"><span>Pitch</span><div class="track"><div class="fill w76"></div></div><span>76%</span></div>
+            <div class="bar-row"><span>Clarity</span><div class="track"><div class="fill w94"></div></div><span>94%</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Deepfake detection</span>
+            <span class="tag warn">Alert</span>
+          </div>
+          <div class="bars">
+            <div class="bar-row"><span>AASIST</span><div class="track"><div class="fill redfill w92"></div></div><span>92%</span></div>
+            <div class="bar-row"><span>RawNet2</span><div class="track"><div class="fill redfill w89"></div></div><span>89%</span></div>
+            <div class="bar-row"><span>Ensemble</span><div class="track"><div class="fill redfill w95"></div></div><span>95%</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h3>Everything the platform needs, without visual clutter</h3>
+        <p>The landing page now acts as a clean entry point instead of a full product dump. The rest of the app can carry a stronger internal layout while this page stays focused on login and registration.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <h4>Voice cloning</h4>
+          <p>Use short reference clips to build reusable voice profiles and manage them from a single workspace.</p>
+          <ul>
+            <li>Fast onboarding</li>
+            <li>Profile management</li>
+            <li>Quality checks</li>
+          </ul>
+        </article>
+        <article class="feature">
+          <h4>Generation</h4>
+          <p>Generate natural speech with expressive controls, consistent voice profiles, and streaming-ready output.</p>
+          <ul>
+            <li>Emotion control</li>
+            <li>Streaming output</li>
+            <li>Format support</li>
+          </ul>
+        </article>
+        <article class="feature">
+          <h4>Detection</h4>
+          <p>Review confidence scores and keep a clear audit trail for every suspicious sample or live session.</p>
+          <ul>
+            <li>Multi-model ensemble</li>
+            <li>Confidence timeline</li>
+            <li>Audit evidence</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>© 2026 Voice-Crafter</div>
+      <div class="footer-links">
+        <a href="/login">Sign in</a>
+        <a href="/register">Register</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

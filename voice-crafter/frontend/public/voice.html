@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice-Crafter — Enterprise Voice AI Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #07070F;
+      --bg2:     #0D0D1B;
+      --bg3:     #111128;
+      --surface: #161632;
+      --s2:      #1E1E3F;
+      --primary: #7C4DFF;
+      --pl:      #9B72FF;
+      --cyan:    #00E5FF;
+      --amber:   #FFD54F;
+      --red:     #FF6B6B;
+      --text:    #EEF0FF;
+      --muted:   #7B82A8;
+      --dim:     #4A4F70;
+      --border:  rgba(124,77,255,0.15);
+      --glow:    rgba(124,77,255,0.3);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── LOADER ── */
+    #loader {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2rem;
+      transition: opacity .7s ease, visibility .7s ease;
+    }
+    #loader.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .ld-logo { display: flex; align-items: center; gap: .75rem; }
+    .ld-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em;
+    }
+    .ld-logo-text span { color: var(--pl); }
+
+    .wave-bars { display: flex; align-items: center; gap: 5px; height: 44px; }
+    .wb {
+      width: 4px; border-radius: 2px;
+      background: linear-gradient(to top, var(--primary), var(--cyan));
+      animation: wb 1.3s ease-in-out infinite;
+    }
+    .wb:nth-child(1){height:18px;animation-delay:0s}
+    .wb:nth-child(2){height:34px;animation-delay:.1s}
+    .wb:nth-child(3){height:44px;animation-delay:.2s}
+    .wb:nth-child(4){height:28px;animation-delay:.3s}
+    .wb:nth-child(5){height:14px;animation-delay:.4s}
+    .wb:nth-child(6){height:36px;animation-delay:.5s}
+    .wb:nth-child(7){height:22px;animation-delay:.6s}
+    @keyframes wb {
+      0%,100%{transform:scaleY(.35);opacity:.45}
+      50%{transform:scaleY(1);opacity:1}
+    }
+    .ld-bar { width: 200px; height: 2px; background: var(--s2); border-radius: 1px; overflow: hidden; }
+    .ld-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--cyan)); border-radius:1px; width:0%; transition: width .12s linear; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1rem 4%;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(24px);
+      background: rgba(7,7,15,.75);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: .6rem;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem; font-weight: 700; letter-spacing: -.02em;
+    }
+    .nav-logo-text span { color: var(--pl); }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .875rem; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+
+    .btn-ghost {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text); padding: .5rem 1.25rem; border-radius: 8px;
+      font: 500 .875rem/1 'Inter', sans-serif; cursor: pointer;
+      text-decoration: none; transition: all .2s;
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--pl); }
+
+    .btn-primary {
+      background: var(--primary); border: none; color: #fff;
+      padding: .5rem 1.25rem; border-radius: 8px;
+      font: 600 .875rem/1 'Inter', sans-serif; cursor: pointer;
+      text-decoration: none; transition: all .2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,77,255,.45); }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative; width: 100vw; height: 100vh; min-height: 680px;
+      display: flex; align-items: center; overflow: hidden;
+    }
+    #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* subtle dot-grid overlay */
+    #hero::before {
+      content: '';
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background-image: radial-gradient(rgba(124,77,255,.12) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 55%, black 100%);
+    }
+
+    .hero-content {
+      position: relative; z-index: 10;
+      padding: 0 4%; max-width: 660px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(124,77,255,.1); border: 1px solid rgba(124,77,255,.3);
+      color: var(--pl); padding: .4rem 1rem; border-radius: 100px;
+      font: 700 .75rem/1 'Inter', sans-serif; letter-spacing: .06em; text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--cyan); animation: pdot 2s ease-in-out infinite;
+    }
+    @keyframes pdot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3rem, 6.5vw, 5.8rem);
+      font-weight: 800; line-height: 1.04; letter-spacing: -.035em;
+      margin-bottom: 1.5rem;
+    }
+    .hero-title .line { display: block; overflow: hidden; }
+    .hero-title .line span { display: block; transform: translateY(110%); opacity: 0; }
+
+    .grad-text {
+      background: linear-gradient(135deg, var(--pl) 0%, var(--cyan) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem; color: var(--muted); max-width: 490px;
+      margin-bottom: 2.5rem; line-height: 1.75; opacity: 0;
+    }
+    .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; opacity: 0; }
+
+    .btn-hero {
+      padding: .9rem 2rem; border-radius: 10px;
+      font: 600 1rem/1 'Inter', sans-serif; cursor: pointer;
+      transition: all .25s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn-hp {
+      background: linear-gradient(135deg, var(--primary), #5528E8);
+      color: #fff; border: none;
+      box-shadow: 0 0 40px rgba(124,77,255,.35);
+    }
+    .btn-hp:hover { transform: translateY(-2px); box-shadow: 0 14px 50px rgba(124,77,255,.55); }
+    .btn-ho {
+      background: rgba(255,255,255,.05); color: var(--text);
+      border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(8px);
+    }
+    .btn-ho:hover { border-color: rgba(255,255,255,.28); background: rgba(255,255,255,.1); }
+
+    .scroll-cue {
+      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: .4rem;
+      color: var(--dim); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+      z-index: 10;
+    }
+    .scroll-line {
+      width: 1px; height: 42px;
+      background: linear-gradient(to bottom, var(--primary), transparent);
+      animation: sline 2.2s ease-in-out infinite;
+    }
+    @keyframes sline { 0%,100%{transform:scaleY(0);transform-origin:top} 50%{transform:scaleY(1);transform-origin:top} }
+
+    /* ── STATS ── */
+    #stats { padding: 5rem 4%; background: var(--bg2); }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      max-width: 1100px; margin: 0 auto;
+      background: var(--border); border-radius: 18px; overflow: hidden;
+    }
+    .stat-card { background: var(--bg2); padding: 2.75rem 2rem; text-align: center; }
+    .stat-val {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 3.2rem; font-weight: 800; letter-spacing: -.04em; display: block;
+      background: linear-gradient(135deg, var(--text), var(--pl));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .stat-label { font-size: .82rem; color: var(--muted); margin-top: .3rem; font-weight: 500; }
+
+    /* ── SHARED SECTION HEADER ── */
+    .sec-header { text-align: center; margin-bottom: 4rem; }
+    .sec-tag {
+      display: inline-block; font: 700 .7rem/1 'Inter', sans-serif;
+      letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); margin-bottom: .9rem;
+    }
+    .sec-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.9rem, 3.8vw, 3.1rem);
+      font-weight: 700; letter-spacing: -.025em; line-height: 1.1; margin-bottom: .9rem;
+    }
+    .sec-sub { font-size: .95rem; color: var(--muted); max-width: 560px; margin: 0 auto; line-height: 1.75; }
+
+    /* ── FEATURES ── */
+    #features { padding: 7rem 4%; background: var(--bg); }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+      max-width: 1100px; margin: 0 auto;
+      background: var(--border); border-radius: 22px; overflow: hidden;
+    }
+    .feat-card {
+      background: var(--bg); padding: 3rem;
+      position: relative; overflow: hidden; transition: background .3s;
+    }
+    .feat-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 10% 10%, rgba(124,77,255,.08) 0%, transparent 70%);
+      opacity: 0; transition: opacity .4s;
+    }
+    .feat-card:hover::after { opacity: 1; }
+    .feat-card:hover { background: var(--bg2); }
+    .feat-tag {
+      position: absolute; top: 2rem; right: 2rem;
+      font: 700 .68rem/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--pl); background: rgba(124,77,255,.12); padding: .25rem .6rem; border-radius: 4px;
+    }
+    .feat-icon {
+      width: 54px; height: 54px; border-radius: 14px;
+      background: rgba(124,77,255,.1); border: 1px solid rgba(124,77,255,.22);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem; transition: all .3s;
+    }
+    .feat-card:hover .feat-icon {
+      background: rgba(124,77,255,.2); border-color: var(--primary);
+      box-shadow: 0 0 24px rgba(124,77,255,.3);
+    }
+    .feat-icon svg { width: 24px; height: 24px; }
+    .feat-title { font: 700 1.4rem/1.2 'Space Grotesk', sans-serif; margin-bottom: .7rem; letter-spacing: -.01em; }
+    .feat-desc { font-size: .875rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.4rem; }
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: .48rem; }
+    .feat-list li {
+      font-size: .82rem; color: var(--muted);
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .feat-list li::before {
+      content: ''; width: 4px; height: 4px; border-radius: 50%;
+      background: var(--cyan); flex-shrink: 0;
+    }
+
+    /* ── HOW IT WORKS ── */
+    #how { padding: 7rem 4%; background: var(--bg2); }
+    .steps-wrap {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem;
+      max-width: 1000px; margin: 0 auto; position: relative;
+    }
+    .steps-wrap::before {
+      content: ''; position: absolute; top: 28px;
+      left: calc(16.66% + 1rem); right: calc(16.66% + 1rem); height: 1px;
+      background: linear-gradient(90deg, var(--primary), var(--cyan));
+    }
+    .step { text-align: center; position: relative; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--bg2); border: 2px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font: 700 1.2rem/1 'Space Grotesk', sans-serif;
+      color: var(--pl); margin: 0 auto 1.5rem;
+      box-shadow: 0 0 22px rgba(124,77,255,.35), inset 0 0 12px rgba(124,77,255,.08);
+    }
+    .step-title { font: 700 1.05rem/1.3 'Space Grotesk', sans-serif; margin-bottom: .5rem; }
+    .step-desc { font-size: .845rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── DETECTION ── */
+    #detection { padding: 7rem 4%; background: var(--bg); overflow: hidden; }
+    .det-wrap {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4.5rem;
+      max-width: 1100px; margin: 0 auto; align-items: center;
+    }
+    .det-visual {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem; position: relative; overflow: hidden;
+    }
+    .det-visual::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    }
+    .wv-label { font: 700 .73rem/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .65rem; }
+    .wv-label.auth { color: var(--cyan); }
+    .wv-label.fake { color: var(--red); }
+    .wv-box { height: 58px; margin-bottom: 1.25rem; overflow: hidden; border-radius: 6px; background: rgba(0,0,0,.2); }
+    .wv-box svg { width: 100%; height: 100%; }
+
+    .conf-row { margin-bottom: .55rem; }
+    .conf-head { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-bottom: .22rem; }
+    .conf-track { height: 5px; background: var(--s2); border-radius: 3px; overflow: hidden; }
+    .conf-fill { height: 100%; border-radius: 3px; transition: width 1.8s cubic-bezier(.16,1,.3,1); }
+
+    .verdict {
+      display: flex; align-items: center; gap: .75rem;
+      margin-top: 1.25rem; padding: .85rem 1rem;
+      border-radius: 10px; border: 1px solid;
+    }
+    .verdict.auth { background: rgba(0,229,255,.05); border-color: rgba(0,229,255,.2); }
+    .verdict.fake { background: rgba(255,107,107,.05); border-color: rgba(255,107,107,.2); }
+    .vdict-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .verdict.auth .vdict-icon { background: rgba(0,229,255,.15); }
+    .verdict.fake .vdict-icon { background: rgba(255,107,107,.15); }
+    .verdict-strong { font: 600 .82rem/1 'Inter', sans-serif; }
+    .verdict.auth .verdict-strong { color: var(--cyan); }
+    .verdict.fake .verdict-strong { color: var(--red); }
+    .verdict-small { font-size: .72rem; color: var(--dim); margin-top: .2rem; }
+
+    .det-sep { height: 1px; background: var(--border); margin: 1.75rem 0; }
+
+    .det-info .sec-tag { text-align: left; display: block; }
+    .det-info h2 {
+      font: 700 clamp(1.8rem,3.2vw,2.7rem)/1.1 'Space Grotesk', sans-serif;
+      letter-spacing: -.025em; margin-bottom: 1rem;
+    }
+    .det-info p { font-size: .9rem; color: var(--muted); line-height: 1.75; margin-bottom: 2rem; }
+    .model-list { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
+    .model-item {
+      display: flex; align-items: center; gap: .9rem;
+      padding: .75rem 1rem; background: var(--bg3);
+      border-radius: 10px; border: 1px solid var(--border); transition: border-color .2s;
+    }
+    .model-item:hover { border-color: rgba(124,77,255,.35); }
+    .model-badge {
+      font: 700 .68rem/1 'Inter', sans-serif; letter-spacing: .06em;
+      background: rgba(124,77,255,.14); color: var(--pl);
+      padding: .2rem .5rem; border-radius: 4px; white-space: nowrap;
+    }
+    .model-name { font: 500 .85rem/1 'Inter', sans-serif; }
+    .model-desc { font-size: .73rem; color: var(--dim); margin-top: .2rem; }
+
+    /* ── LANGUAGES ── */
+    #languages { padding: 5.5rem 4%; background: var(--bg2); }
+    .lang-grid { display: flex; flex-wrap: wrap; gap: .65rem; justify-content: center; max-width: 900px; margin: 0 auto; }
+    .lang-pill {
+      display: flex; align-items: center; gap: .45rem;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: .5rem 1rem; border-radius: 100px;
+      font-size: .82rem; font-weight: 500; transition: all .2s; cursor: default;
+    }
+    .lang-pill:hover { border-color: var(--primary); background: rgba(124,77,255,.1); color: var(--pl); }
+
+    /* ── PRICING ── */
+    #pricing { padding: 7rem 4%; background: var(--bg); }
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      max-width: 1100px; margin: 0 auto;
+      background: var(--border); border-radius: 22px; overflow: hidden;
+    }
+    .price-card { background: var(--bg); padding: 2.5rem 1.75rem; position: relative; transition: background .3s; }
+    .price-card:hover { background: var(--bg2); }
+    .price-card.pop {
+      background: var(--bg2);
+    }
+    .price-card.pop::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--cyan));
+    }
+    .price-badge {
+      font: 700 .67rem/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--pl); background: rgba(124,77,255,.14); padding: .24rem .55rem;
+      border-radius: 4px; display: inline-block; margin-bottom: 1.25rem;
+    }
+    .price-name { font: 700 1.1rem/1 'Space Grotesk', sans-serif; margin-bottom: .5rem; }
+    .price-amount {
+      font: 800 2.6rem/1 'Space Grotesk', sans-serif;
+      letter-spacing: -.04em; margin-bottom: .22rem;
+    }
+    .price-amount small { font-size: 1rem; font-weight: 400; color: var(--muted); }
+    .price-desc { font-size: .78rem; color: var(--muted); margin-bottom: 1.4rem; min-height: 2.2rem; }
+    .price-div { height: 1px; background: var(--border); margin-bottom: 1.4rem; }
+    .price-feats { list-style: none; display: flex; flex-direction: column; gap: .55rem; margin-bottom: 2rem; }
+    .price-feats li { font-size: .8rem; color: var(--muted); display: flex; align-items: flex-start; gap: .5rem; }
+    .ck { color: var(--cyan); flex-shrink: 0; font-size: .75rem; margin-top: .05rem; }
+    .cx { color: var(--dim); flex-shrink: 0; }
+    .price-cta {
+      width: 100%; padding: .75rem; border-radius: 8px;
+      font: 600 .875rem/1 'Inter', sans-serif; cursor: pointer; transition: all .2s;
+    }
+    .price-cta.out { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .price-cta.out:hover { border-color: var(--primary); color: var(--pl); }
+    .price-cta.fill { background: linear-gradient(135deg, var(--primary), #5528E8); color: #fff; border: none; }
+    .price-cta.fill:hover { box-shadow: 0 8px 28px rgba(124,77,255,.45); transform: translateY(-1px); }
+
+    /* ── TECH STACK ── */
+    #tech { padding: 5rem 4%; background: var(--bg2); }
+    .tech-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      max-width: 1100px; margin: 0 auto;
+      background: var(--border); border-radius: 18px; overflow: hidden;
+    }
+    .tech-item { background: var(--bg2); padding: 1.75rem; transition: background .2s; }
+    .tech-item:hover { background: var(--bg3); }
+    .tech-layer { font: 700 .68rem/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: .4rem; }
+    .tech-name { font: 600 .9rem/1.3 'Inter', sans-serif; color: var(--text); margin-bottom: .25rem; }
+    .tech-desc { font-size: .75rem; color: var(--dim); }
+
+    /* ── TESTIMONIALS ── */
+    #testi { padding: 7rem 4%; background: var(--bg); }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .testi-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; transition: border-color .2s, transform .2s;
+    }
+    .testi-card:hover { border-color: rgba(124,77,255,.3); transform: translateY(-4px); }
+    .testi-q { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; color: var(--primary); line-height: 1; margin-bottom: .75rem; }
+    .testi-text { font-size: .875rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.5rem; }
+    .testi-author { display: flex; align-items: center; gap: .75rem; }
+    .testi-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font: 700 .88rem/1 'Space Grotesk', sans-serif; color: #fff; flex-shrink: 0;
+    }
+    .testi-name { font: 600 .875rem/1 'Inter', sans-serif; }
+    .testi-role { font-size: .73rem; color: var(--dim); margin-top: .2rem; }
+
+    /* ── CTA ── */
+    #cta {
+      padding: 8rem 4%; background: var(--bg2);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    #cta::before {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, rgba(124,77,255,.14) 0%, transparent 68%);
+      pointer-events: none;
+    }
+    #cta::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px; height: 300px;
+      background: radial-gradient(ellipse, rgba(0,229,255,.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-title {
+      font: 800 clamp(2.4rem,5vw,4rem)/1.05 'Space Grotesk', sans-serif;
+      letter-spacing: -.03em; margin-bottom: 1.1rem; position: relative;
+    }
+    .cta-sub { font-size: .95rem; color: var(--muted); margin-bottom: 2.5rem; position: relative; }
+    .cta-acts { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 4rem 4% 2rem; background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+    .foot-top {
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 3rem;
+    }
+    .foot-brand p { font-size: .83rem; color: var(--muted); line-height: 1.75; margin-top: .75rem; max-width: 270px; }
+    .foot-col h4 { font: 700 .7rem/1 'Inter', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-bottom: 1rem; }
+    .foot-col ul { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
+    .foot-col a { color: var(--muted); text-decoration: none; font-size: .86rem; transition: color .2s; }
+    .foot-col a:hover { color: var(--text); }
+    .foot-bottom {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 2rem; border-top: 1px solid var(--border);
+    }
+    .foot-bottom p { font-size: .78rem; color: var(--dim); }
+    .foot-links { display: flex; gap: 1.5rem; }
+    .foot-links a { color: var(--muted); text-decoration: none; font-size: .78rem; transition: color .2s; }
+    .foot-links a:hover { color: var(--pl); }
+
+    /* ── SCROLL REVEAL ── */
+    .su {
+      opacity: 0; transform: translateY(38px);
+      transition: opacity .75s cubic-bezier(.16,1,.3,1), transform .75s cubic-bezier(.16,1,.3,1);
+    }
+    .su.vis { opacity: 1; transform: translateY(0); }
+    .d1 { transition-delay: .1s; }
+    .d2 { transition-delay: .2s; }
+    .d3 { transition-delay: .3s; }
+    .d4 { transition-delay: .4s; }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .det-wrap { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: repeat(2,1fr); }
+      .tech-grid { grid-template-columns: repeat(2,1fr); }
+      .testi-grid { grid-template-columns: 1fr; }
+      .steps-wrap { grid-template-columns: 1fr; }
+      .steps-wrap::before { display: none; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .foot-top { grid-template-columns: 1fr 1fr; gap: 2rem; }
+      .nav-links { display: none; }
+    }
+    @media(max-width:520px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+      .foot-top { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ░░ LOADER ░░ -->
+<div id="loader">
+  <div class="ld-logo">
+    <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+      <rect width="38" height="38" rx="9" fill="rgba(124,77,255,0.14)"/>
+      <path d="M7 19 Q10.5 11 14 19 Q17.5 27 21 19 Q24.5 11 31 19" stroke="url(#lg)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <defs><linearGradient id="lg" x1="7" y1="19" x2="31" y2="19"><stop stop-color="#7C4DFF"/><stop offset="1" stop-color="#00E5FF"/></linearGradient></defs>
+    </svg>
+    <div class="ld-logo-text">Voice<span>Crafter</span></div>
+  </div>
+  <div class="wave-bars">
+    <div class="wb"></div><div class="wb"></div><div class="wb"></div>
+    <div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+  </div>
+  <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
+</div>
+
+<!-- ░░ NAV ░░ -->
+<nav>
+  <a href="#" class="nav-logo">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+      <rect width="30" height="30" rx="7" fill="rgba(124,77,255,0.14)"/>
+      <path d="M5 15 Q8.5 8 12 15 Q15.5 22 19 15 Q22.5 8 25 15" stroke="url(#navg)" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <defs><linearGradient id="navg" x1="5" y1="15" x2="25" y2="15"><stop stop-color="#7C4DFF"/><stop offset="1" stop-color="#00E5FF"/></linearGradient></defs>
+    </svg>
+    <div class="nav-logo-text">Voice<span>Crafter</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#detection">Detection</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#tech">Stack</a></li>
+    <li><a href="#">Docs</a></li>
+  </ul>
+  <div class="actions">
+        <a class="btn btn-ghost" href="/login">Sign in</a>
+        <a class="btn btn-primary" href="/register">Register</a>
+  </div>
+</nav>
+
+<!-- ░░ HERO ░░ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge"><div class="badge-dot"></div>Open Source · Enterprise Ready</div>
+    <h1 class="hero-title">
+      <div class="line"><span>Your Voice.</span></div>
+      <div class="line"><span class="grad-text">Infinite</span></div>
+      <div class="line"><span>Possibilities.</span></div>
+    </h1>
+    <p class="hero-sub">Clone, generate, detect, and stream voice AI at enterprise scale. The most complete open-source platform — real cloning in 3 seconds, 17 languages, 5-model deepfake detection.</p>
+    <div class="hero-ctas">
+      <a href="#features" class="btn-hero btn-hp">Start Building Free →</a>
+      <a href="#detection" class="btn-hero btn-ho">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 13a5.5 5.5 0 100-11 5.5 5.5 0 000 11z" stroke="currentColor" stroke-width="1.4"/><path d="M6 5l3.5 2.5L6 10" fill="currentColor"/></svg>
+        Watch Demo
+      </a>
+    </div>
+  </div>
+  <div class="scroll-cue"><div class="scroll-line"></div>Scroll</div>
+</section>
+
+<!-- ░░ STATS ░░ -->
+<section id="stats">
+  <div class="stats-grid">
+    <div class="stat-card su"><span class="stat-val" data-t="17">0</span><span class="stat-label">Languages Supported</span></div>
+    <div class="stat-card su d1"><span class="stat-val" data-t="5">0</span><span class="stat-label">Detection Models in Ensemble</span></div>
+    <div class="stat-card su d2"><span class="stat-val" data-t="3" data-s="s+">0</span><span class="stat-label">Seconds to Clone a Voice</span></div>
+    <div class="stat-card su d3"><span class="stat-val" data-t="99.7" data-s="%">0</span><span class="stat-label">Detection Accuracy</span></div>
+  </div>
+</section>
+
+<!-- ░░ FEATURES ░░ -->
+<section id="features">
+  <div class="sec-header su">
+    <span class="sec-tag">Platform Features</span>
+    <h2 class="sec-title">Everything Voice AI Needs</h2>
+    <p class="sec-sub">Four powerful pillars covering the complete voice AI lifecycle — from cloning to generation, detection to deployment.</p>
+  </div>
+  <div class="features-grid">
+
+    <div class="feat-card su">
+      <span class="feat-tag">XTTS-v2</span>
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9B72FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+          <path d="M8 12a4 4 0 008 0"/>
+          <circle cx="12" cy="12" r="2" fill="#9B72FF" stroke="none"/>
+        </svg>
+      </div>
+      <h3 class="feat-title">Voice Cloning</h3>
+      <p class="feat-desc">Clone any voice from just 3 seconds of audio with zero-shot XTTS-v2 technology. Fine-tune for professional-grade fidelity and manage speaker profiles with full version control.</p>
+      <ul class="feat-list">
+        <li>Zero-shot cloning from 3+ seconds of audio</li>
+        <li>Fine-tune mode for maximum voice similarity</li>
+        <li>Speaker embedding extraction & versioning</li>
+        <li>Audio quality pre-analysis via Quality Lab</li>
+        <li>Public / private voice profiles with metadata</li>
+      </ul>
+    </div>
+
+    <div class="feat-card su d1">
+      <span class="feat-tag">17 Languages</span>
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9B72FF" stroke-width="1.5" stroke-linecap="round">
+          <path d="M3 8h18M3 12h18M3 16h18"/><path d="M9 3L3 21M15 3l6 18"/>
+        </svg>
+      </div>
+      <h3 class="feat-title">Voice Generation (TTS)</h3>
+      <p class="feat-desc">Generate expressive, natural-sounding speech in 17 languages. Control emotion, speed, pitch, and temperature with granular precision. Stream audio live over WebSocket.</p>
+      <ul class="feat-list">
+        <li>8 emotions: neutral, happy, sad, excited, calm, professional, storytelling, news</li>
+        <li>Speed, pitch & temperature controls</li>
+        <li>SSML support on Pro & Enterprise plans</li>
+        <li>Streaming audio output via WebSocket</li>
+        <li>WAV, MP3, FLAC, OGG output formats</li>
+      </ul>
+    </div>
+
+    <div class="feat-card su d2">
+      <span class="feat-tag">5-Model Ensemble</span>
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9B72FF" stroke-width="1.5" stroke-linecap="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <h3 class="feat-title">Deepfake Detection</h3>
+      <p class="feat-desc">Industry-leading 5-model ensemble catches voice deepfakes with unmatched accuracy. Real-time streaming analysis, batch processing, and forensic-grade chain-of-custody evidence logs.</p>
+      <ul class="feat-list">
+        <li>AASIST + RawNet2 + Prosodic + Spectral + Glottal</li>
+        <li>Real-time mic stream detection via WebSocket</li>
+        <li>Batch file analysis with confidence timeline</li>
+        <li>Per-speaker diarization & fraud scoring</li>
+        <li>Chain-of-custody evidence logs & JSON export</li>
+      </ul>
+    </div>
+
+    <div class="feat-card su d3">
+      <span class="feat-tag">Enterprise SaaS</span>
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9B72FF" stroke-width="1.5" stroke-linecap="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/><path d="M7 8h4M7 12h8"/>
+        </svg>
+      </div>
+      <h3 class="feat-title">Enterprise Platform</h3>
+      <p class="feat-desc">Full multi-tenant SaaS with role-based access, real-time notifications, audit logging, and a Claude-powered AI assistant. Built to scale from solo developer to enterprise fleet.</p>
+      <ul class="feat-list">
+        <li>Free / Starter / Pro / Enterprise tiers</li>
+        <li>Quality Lab — SNR, speech ratio, clipping analysis</li>
+        <li>Benchmark Center — model accuracy & latency</li>
+        <li>Claude-powered AI chatbot assistant</li>
+        <li>Social features: follows, likes, comments, voice hub</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ HOW IT WORKS ░░ -->
+<section id="how">
+  <div class="sec-header su">
+    <span class="sec-tag">How It Works</span>
+    <h2 class="sec-title">From Audio to Intelligence</h2>
+    <p class="sec-sub">Three steps to unlock the full power of voice AI — whether cloning, generating, or detecting at scale.</p>
+  </div>
+  <div class="steps-wrap">
+    <div class="step su">
+      <div class="step-num">01</div>
+      <h3 class="step-title">Upload or Record</h3>
+      <p class="step-desc">Provide 3+ seconds of audio via file upload, live microphone stream, or direct API call. Quality Lab instantly analyzes SNR, speech ratio, and clipping.</p>
+    </div>
+    <div class="step su d1">
+      <div class="step-num">02</div>
+      <h3 class="step-title">AI Processing</h3>
+      <p class="step-desc">XTTS-v2 extracts voice embeddings for cloning. The 5-model ensemble simultaneously analyzes spectral, prosodic, and glottal features for deepfake detection.</p>
+    </div>
+    <div class="step su d2">
+      <div class="step-num">03</div>
+      <h3 class="step-title">Generate or Detect</h3>
+      <p class="step-desc">Receive your cloned voice profile, synthesized audio in any format, or a full forensic report with per-model confidence scores and chain-of-custody evidence log.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ DETECTION ░░ -->
+<section id="detection">
+  <div class="det-wrap">
+    <div class="det-visual su">
+      <div class="wv-label auth">✓ Authentic Voice</div>
+      <div class="wv-box"><svg id="wv-auth" viewBox="0 0 300 58" preserveAspectRatio="none"></svg></div>
+      <div class="conf-row">
+        <div class="conf-head"><span>AASIST</span><span style="color:var(--cyan)">98.2%</span></div>
+        <div class="conf-track"><div class="conf-fill" style="width:98.2%;background:linear-gradient(90deg,#00B4D8,#00E5FF)"></div></div>
+      </div>
+      <div class="conf-row">
+        <div class="conf-head"><span>RawNet2</span><span style="color:var(--cyan)">97.5%</span></div>
+        <div class="conf-track"><div class="conf-fill" style="width:97.5%;background:linear-gradient(90deg,#00B4D8,#00E5FF)"></div></div>
+      </div>
+      <div class="conf-row">
+        <div class="conf-head"><span>Prosodic</span><span style="color:var(--cyan)">99.1%</span></div>
+        <div class="conf-track"><div class="conf-fill" style="width:99.1%;background:linear-gradient(90deg,#00B4D8,#00E5FF)"></div></div>
+      </div>
+      <div class="verdict auth">
+        <div class="vdict-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3.5L12 3.5" stroke="#00E5FF" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+        <div><div class="verdict-strong">AUTHENTIC — 98.3% Confidence</div><div class="verdict-small">All 5 models agree · 11ms latency</div></div>
+      </div>
+
+      <div class="det-sep"></div>
+
+      <div class="wv-label fake">⚠ Deepfake Detected</div>
+      <div class="wv-box"><svg id="wv-fake" viewBox="0 0 300 58" preserveAspectRatio="none"></svg></div>
+      <div class="conf-row">
+        <div class="conf-head"><span>Spectral Analysis</span><span style="color:var(--red)">91.7%</span></div>
+        <div class="conf-track"><div class="conf-fill" style="width:91.7%;background:linear-gradient(90deg,#FF4444,#FF6B6B)"></div></div>
+      </div>
+      <div class="conf-row">
+        <div class="conf-head"><span>Glottal Features</span><span style="color:var(--red)">88.4%</span></div>
+        <div class="conf-track"><div class="conf-fill" style="width:88.4%;background:linear-gradient(90deg,#FF4444,#FF6B6B)"></div></div>
+      </div>
+      <div class="verdict fake">
+        <div class="vdict-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3L3 11" stroke="#FF6B6B" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+        <div><div class="verdict-strong">DEEPFAKE — 94.1% Confidence</div><div class="verdict-small">GAN artifacts detected · Evidence log generated</div></div>
+      </div>
+    </div>
+
+    <div class="det-info su d1">
+      <span class="sec-tag">Deepfake Detection</span>
+      <h2>5 Models.<br>One Verdict.<br>Zero Doubt.</h2>
+      <p>Our proprietary ensemble architecture runs every audio sample through five independent neural networks simultaneously. No single model decides — weighted consensus scoring ensures the highest accuracy in the industry, with forensic-grade audit trails for legal proceedings.</p>
+      <ul class="model-list">
+        <li class="model-item"><span class="model-badge">AASIST</span><div><div class="model-name">Anti-Spoofing via Spectral & Temporal</div><div class="model-desc">Graph neural network · End-to-end training on raw spectral features</div></div></li>
+        <li class="model-item"><span class="model-badge">RawNet2</span><div><div class="model-name">Raw Waveform Analysis</div><div class="model-desc">Deep learning on raw audio signals · No hand-crafted features</div></div></li>
+        <li class="model-item"><span class="model-badge">PROSODIC</span><div><div class="model-name">Prosodic Feature Analyzer</div><div class="model-desc">Pitch, rhythm and stress pattern irregularity detection</div></div></li>
+        <li class="model-item"><span class="model-badge">SPECTRAL</span><div><div class="model-name">Spectral Fingerprinting</div><div class="model-desc">Frequency domain artifact & GAN fingerprint detection</div></div></li>
+        <li class="model-item"><span class="model-badge">GLOTTAL</span><div><div class="model-name">Glottal Source Modeling</div><div class="model-desc">Vocal tract & source separation anomaly analysis</div></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ LANGUAGES ░░ -->
+<section id="languages">
+  <div class="sec-header su">
+    <span class="sec-tag">Global Coverage</span>
+    <h2 class="sec-title">17 Languages, One Platform</h2>
+    <p class="sec-sub">Generate natural, emotionally expressive speech in any of our supported languages with the same quality and control.</p>
+  </div>
+  <div class="lang-grid su">
+    <div class="lang-pill">🇺🇸 English</div>
+    <div class="lang-pill">🇪🇸 Spanish</div>
+    <div class="lang-pill">🇫🇷 French</div>
+    <div class="lang-pill">🇩🇪 German</div>
+    <div class="lang-pill">🇮🇹 Italian</div>
+    <div class="lang-pill">🇵🇹 Portuguese</div>
+    <div class="lang-pill">🇵🇱 Polish</div>
+    <div class="lang-pill">🇹🇷 Turkish</div>
+    <div class="lang-pill">🇷🇺 Russian</div>
+    <div class="lang-pill">🇳🇱 Dutch</div>
+    <div class="lang-pill">🇨🇿 Czech</div>
+    <div class="lang-pill">🇸🇦 Arabic</div>
+    <div class="lang-pill">🇨🇳 Chinese</div>
+    <div class="lang-pill">🇯🇵 Japanese</div>
+    <div class="lang-pill">🇰🇷 Korean</div>
+    <div class="lang-pill">🇭🇺 Hungarian</div>
+    <div class="lang-pill">🇮🇳 Hindi</div>
+  </div>
+</section>
+
+<!-- ░░ PRICING ░░ -->
+<section id="pricing">
+  <div class="sec-header su">
+    <span class="sec-tag">Pricing</span>
+    <h2 class="sec-title">Built for Every Scale</h2>
+    <p class="sec-sub">Start free and grow as you need. No hidden fees. Upgrade or downgrade anytime with zero friction.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="price-card su">
+      <div class="price-name">Free</div>
+      <div class="price-amount">$0<small>/mo</small></div>
+      <div class="price-desc">For individuals & exploration</div>
+      <div class="price-div"></div>
+      <ul class="price-feats">
+        <li><span class="ck">✓</span>10 voice clones / month</li>
+        <li><span class="ck">✓</span>10K TTS characters / month</li>
+        <li><span class="ck">✓</span>Basic detection (AASIST only)</li>
+        <li><span class="ck">✓</span>5 languages</li>
+        <li><span class="ck">✓</span>WAV output only</li>
+        <li><span class="ck">✓</span>Community support</li>
+        <li><span class="cx">✗</span>Streaming API</li>
+        <li><span class="cx">✗</span>Audit logs</li>
+      </ul>
+      <button class="price-cta out">Start Free</button>
+    </div>
+    <div class="price-card su d1">
+      <div class="price-name">Starter</div>
+      <div class="price-amount">$29<small>/mo</small></div>
+      <div class="price-desc">For indie devs & small teams</div>
+      <div class="price-div"></div>
+      <ul class="price-feats">
+        <li><span class="ck">✓</span>100 voice clones / month</li>
+        <li><span class="ck">✓</span>50K TTS characters / month</li>
+        <li><span class="ck">✓</span>3-model detection ensemble</li>
+        <li><span class="ck">✓</span>All 17 languages</li>
+        <li><span class="ck">✓</span>MP3 + WAV output</li>
+        <li><span class="ck">✓</span>REST API access</li>
+        <li><span class="ck">✓</span>Email support</li>
+        <li><span class="cx">✗</span>SSML support</li>
+      </ul>
+      <button class="price-cta out">Get Starter</button>
+    </div>
+    <div class="price-card pop su d2">
+      <div class="price-badge">Most Popular</div>
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$99<small>/mo</small></div>
+      <div class="price-desc">For professional teams & production apps</div>
+      <div class="price-div"></div>
+      <ul class="price-feats">
+        <li><span class="ck">✓</span>Unlimited voice clones</li>
+        <li><span class="ck">✓</span>500K TTS characters / month</li>
+        <li><span class="ck">✓</span>Full 5-model ensemble</li>
+        <li><span class="ck">✓</span>All formats + live streaming</li>
+        <li><span class="ck">✓</span>SSML support</li>
+        <li><span class="ck">✓</span>WebSocket real-time API</li>
+        <li><span class="ck">✓</span>Audit logs + CSV export</li>
+        <li><span class="ck">✓</span>Priority support</li>
+      </ul>
+      <button class="price-cta fill">Get Pro</button>
+    </div>
+    <div class="price-card su d3">
+      <div class="price-name">Enterprise</div>
+      <div class="price-amount" style="font-size:1.9rem">Custom</div>
+      <div class="price-desc">For large-scale & regulated deployments</div>
+      <div class="price-div"></div>
+      <ul class="price-feats">
+        <li><span class="ck">✓</span>Unlimited everything</li>
+        <li><span class="ck">✓</span>On-premise deployment</li>
+        <li><span class="ck">✓</span>Custom model fine-tuning</li>
+        <li><span class="ck">✓</span>SOC 2 / GDPR / HIPAA</li>
+        <li><span class="ck">✓</span>99.99% uptime SLA</li>
+        <li><span class="ck">✓</span>Dedicated infrastructure</li>
+        <li><span class="ck">✓</span>24/7 enterprise support</li>
+        <li><span class="ck">✓</span>Custom integrations & SSO</li>
+      </ul>
+      <button class="price-cta out">Contact Sales</button>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ TECH STACK ░░ -->
+<section id="tech">
+  <div class="sec-header su">
+    <span class="sec-tag">Built With</span>
+    <h2 class="sec-title">Modern Tech, Enterprise Grade</h2>
+    <p class="sec-sub">Every component chosen for performance, reliability, and scale. Open source where it matters, battle-tested everywhere.</p>
+  </div>
+  <div class="tech-grid su">
+    <div class="tech-item"><div class="tech-layer">Frontend</div><div class="tech-name">React 18 + TypeScript</div><div class="tech-desc">Vite, Framer Motion, Recharts</div></div>
+    <div class="tech-item"><div class="tech-layer">Backend</div><div class="tech-name">FastAPI + SQLAlchemy 2.0</div><div class="tech-desc">Async PostgreSQL, Pydantic v2</div></div>
+    <div class="tech-item"><div class="tech-layer">Cache & Queue</div><div class="tech-name">Redis + Celery</div><div class="tech-desc">Distributed task processing at scale</div></div>
+    <div class="tech-item"><div class="tech-layer">Storage</div><div class="tech-name">MinIO (S3-Compatible)</div><div class="tech-desc">Scalable object storage for audio</div></div>
+    <div class="tech-item"><div class="tech-layer">Voice Cloning</div><div class="tech-name">Coqui TTS / XTTS-v2</div><div class="tech-desc">Zero-shot multilingual voice cloning</div></div>
+    <div class="tech-item"><div class="tech-layer">Detection</div><div class="tech-name">AASIST + RawNet2</div><div class="tech-desc">+ 3 proprietary ensemble models</div></div>
+    <div class="tech-item"><div class="tech-layer">Diarization</div><div class="tech-name">pyannote.audio 3.1</div><div class="tech-desc">Speaker segmentation & tracking</div></div>
+    <div class="tech-item"><div class="tech-layer">Auth & Security</div><div class="tech-name">JWT + Refresh Tokens</div><div class="tech-desc">RBAC, API key management</div></div>
+  </div>
+</section>
+
+<!-- ░░ TESTIMONIALS ░░ -->
+<section id="testi">
+  <div class="sec-header su">
+    <span class="sec-tag">Testimonials</span>
+    <h2 class="sec-title">Trusted by Builders</h2>
+    <p class="sec-sub">From security teams to audio directors, Voice-Crafter powers voice AI across every industry.</p>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card su">
+      <div class="testi-q">"</div>
+      <p class="testi-text">Voice-Crafter's 5-model deepfake detection saved us from a $2.3M fraud attempt. The chain-of-custody logs were admissible evidence in the subsequent legal proceedings.</p>
+      <div class="testi-author">
+        <div class="testi-av">SC</div>
+        <div><div class="testi-name">Sarah Chen</div><div class="testi-role">Head of Security · NovaPay Financial</div></div>
+      </div>
+    </div>
+    <div class="testi-card su d1">
+      <div class="testi-q">"</div>
+      <p class="testi-text">The voice cloning quality is indistinguishable from the real thing. We produce 40+ audiobook hours weekly at a fraction of studio cost. Quality Lab catches every issue before delivery.</p>
+      <div class="testi-author">
+        <div class="testi-av">MR</div>
+        <div><div class="testi-name">Marcus Rodriguez</div><div class="testi-role">Audio Director · StoryStream Studios</div></div>
+      </div>
+    </div>
+    <div class="testi-card su d2">
+      <div class="testi-q">"</div>
+      <p class="testi-text">We process 10M+ audio files monthly through the Voice-Crafter API. WebSocket streaming and batch analysis keeps our detection latency under 50ms even at peak load.</p>
+      <div class="testi-author">
+        <div class="testi-av">LW</div>
+        <div><div class="testi-name">Li Wei</div><div class="testi-role">CTO · MediaAI Technologies</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ CTA ░░ -->
+<section id="cta">
+  <div class="su">
+    <span class="sec-tag" style="display:block;text-align:center;margin-bottom:.9rem">Ready to Start?</span>
+    <h2 class="cta-title">The Voice Revolution<br><span class="grad-text">Starts Here.</span></h2>
+    <p class="cta-sub">Join thousands of developers building the next generation of voice applications.</p>
+    <div class="cta-acts">
+      <a href="#" class="btn-hero btn-hp">Start Building Free →</a>
+      <a href="#" class="btn-hero btn-ho">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- ░░ FOOTER ░░ -->
+<footer>
+  <div class="foot-top">
+    <div class="foot-brand">
+      <a href="#" class="nav-logo">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+          <rect width="30" height="30" rx="7" fill="rgba(124,77,255,0.14)"/>
+          <path d="M5 15 Q8.5 8 12 15 Q15.5 22 19 15 Q22.5 8 25 15" stroke="url(#ftg)" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <defs><linearGradient id="ftg" x1="5" y1="15" x2="25" y2="15"><stop stop-color="#7C4DFF"/><stop offset="1" stop-color="#00E5FF"/></linearGradient></defs>
+        </svg>
+        <div class="nav-logo-text">Voice<span>Crafter</span></div>
+      </a>
+      <p>The most complete open-source voice AI platform. Clone, generate, detect, and stream at enterprise scale. MIT Licensed.</p>
+    </div>
+    <div class="foot-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="#features">Voice Cloning</a></li>
+        <li><a href="#features">Text-to-Speech</a></li>
+        <li><a href="#detection">Deepfake Detection</a></li>
+        <li><a href="#languages">Languages</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="#">Documentation</a></li>
+        <li><a href="#">API Reference</a></li>
+        <li><a href="#">GitHub</a></li>
+        <li><a href="#">SDKs & Libraries</a></li>
+        <li><a href="#">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Security</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© 2025 Voice-Crafter. Open source under MIT License.</p>
+    <div class="foot-links">
+      <a href="#">GitHub</a>
+      <a href="#">Twitter / X</a>
+      <a href="#">Discord</a>
+      <a href="#">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ░░ SCRIPTS ░░ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script>
+/* ── LOADER ── */
+const loaderEl = document.getElementById('loader');
+const fillEl   = document.getElementById('ldFill');
+let prog = 0;
+const tick = setInterval(() => {
+  prog += Math.random() * 18 + 6;
+  if (prog >= 100) { prog = 100; clearInterval(tick); setTimeout(boot, 400); }
+  fillEl.style.width = prog + '%';
+}, 130);
+
+/* ── BOOT ── */
+function boot() {
+  loaderEl.classList.add('gone');
+  initThree();
+  initHeroAnim();
+  initCounters();
+  initObserver();
+  initWaveforms();
+  initMagnetic();
+}
+
+/* ─────────────────────────────
+   THREE.JS PARTICLE SPHERE
+───────────────────────────── */
+function initThree() {
+  if (typeof THREE === 'undefined') return;
+
+  const canvas   = document.getElementById('hero-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 5.8);
+
+  /* Fibonacci sphere — even coverage */
+  const N    = 6000;
+  const geo  = new THREE.BufferGeometry();
+  const pos  = new Float32Array(N * 3);
+  const col  = new Float32Array(N * 3);
+  const orig = new Float32Array(N * 3);
+  const PHI  = Math.PI * (3 - Math.sqrt(5));
+
+  for (let i = 0; i < N; i++) {
+    const y_norm = 1 - (i / (N - 1)) * 2;   // +1 → -1
+    const r      = Math.sqrt(Math.max(0, 1 - y_norm * y_norm));
+    const theta  = PHI * i;
+    const R      = 2.6;
+
+    const x = Math.cos(theta) * r * R;
+    const y = y_norm * R;
+    const z = Math.sin(theta) * r * R;
+
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+    orig[i*3]=x; orig[i*3+1]=y; orig[i*3+2]=z;
+
+    /* Violet (#7C4DFF) equator → Cyan (#00E5FF) poles */
+    const t = Math.abs(y_norm);           // 0 = equator, 1 = poles
+    col[i*3]   = 0.49 * (1 - t);         // R drops at poles
+    col[i*3+1] = 0.30 + 0.59 * t;        // G rises at poles
+    col[i*3+2] = 1.00;                    // B always full
+  }
+
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+
+  const mat = new THREE.PointsMaterial({
+    size: 0.028, vertexColors: true,
+    transparent: true, opacity: 0.72, sizeAttenuation: true
+  });
+
+  const sphere = new THREE.Points(geo, mat);
+  sphere.position.set(2.8, 0, 0); // right-side offset
+  scene.add(sphere);
+
+  /* Mouse parallax */
+  let mx = 0, my = 0, tmx = 0, tmy = 0;
+  document.addEventListener('mousemove', e => {
+    tmx = (e.clientX / window.innerWidth  - 0.5) * 2;
+    tmy = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  /* Scroll */
+  let scrollY = 0;
+  window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
+
+  /* Render loop */
+  let clock = 0;
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    clock = ts * 0.001;
+
+    mx += (tmx - mx) * 0.045;
+    my += (tmy - my) * 0.045;
+
+    const positions = geo.attributes.position.array;
+    const sf = Math.min(scrollY / window.innerHeight, 1.4);
+
+    for (let i = 0; i < N; i++) {
+      const ox = orig[i*3], oy = orig[i*3+1], oz = orig[i*3+2];
+
+      /* Living audio-wave oscillation */
+      const w = Math.sin(ox * 0.9 + clock * 1.1) * Math.cos(oy * 0.9 + clock * 0.75) * 0.1;
+
+      /* Scroll: sphere gently expands outward */
+      const ex = ox * (1 + sf * 0.28) + Math.sin(oy + clock * 0.55) * w;
+      const ey = oy * (1 + sf * 0.28) + Math.cos(oz + clock * 0.48) * w;
+      const ez = oz * (1 + sf * 0.22) + Math.sin(ox + clock * 0.38) * w;
+
+      positions[i*3]   = ex;
+      positions[i*3+1] = ey;
+      positions[i*3+2] = ez;
+    }
+
+    geo.attributes.position.needsUpdate = true;
+
+    sphere.rotation.y = clock * 0.065 + mx * 0.38;
+    sphere.rotation.x = clock * 0.028 - my * 0.22;
+
+    mat.opacity = Math.max(0, 0.72 - sf * 0.52);
+
+    renderer.render(scene, camera);
+  }
+  frame(0);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+/* ─────────────────────────────
+   HERO TEXT ANIMATION (GSAP)
+───────────────────────────── */
+function initHeroAnim() {
+  const lines = document.querySelectorAll('.hero-title .line span');
+  if (typeof gsap !== 'undefined') {
+    gsap.to('.hero-badge', { opacity:1, y:0, duration:.7, ease:'power2.out', delay:.1 });
+    gsap.to(lines, {
+      y:'0%', opacity:1, duration:1.05, stagger:.18,
+      ease:'power3.out', delay:.25
+    });
+    gsap.to('.hero-sub',  { opacity:1, y:0, duration:.8, ease:'power2.out', delay:.75 });
+    gsap.to('.hero-ctas', { opacity:1, y:0, duration:.8, ease:'power2.out', delay:.95 });
+  } else {
+    /* Fallback */
+    lines.forEach(l => { l.style.opacity=1; l.style.transform='translateY(0)'; });
+    document.querySelector('.hero-sub').style.opacity=1;
+    document.querySelector('.hero-ctas').style.opacity=1;
+  }
+}
+
+/* ─────────────────────────────
+   STAT COUNTERS
+───────────────────────────── */
+function initCounters() {
+  const els = document.querySelectorAll('.stat-val[data-t]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      obs.unobserve(e.target);
+      const el  = e.target;
+      const tgt = parseFloat(el.dataset.t);
+      const suf = el.dataset.s || '';
+      const dec = tgt % 1 !== 0;
+      let start = null;
+      const dur = 1600;
+      function step(ts) {
+        if (!start) start = ts;
+        const prog = Math.min((ts - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - prog, 3);
+        const val  = tgt * ease;
+        el.textContent = (dec ? val.toFixed(1) : Math.round(val)) + suf;
+        if (prog < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }, { threshold: .2 });
+  els.forEach(el => obs.observe(el));
+}
+
+/* ─────────────────────────────
+   SCROLL REVEAL (IntersectionObserver)
+───────────────────────────── */
+function initObserver() {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); }
+    });
+  }, { threshold: .08, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.su').forEach(el => io.observe(el));
+}
+
+/* ─────────────────────────────
+   WAVEFORM SVGs
+───────────────────────────── */
+function drawWave(id, authentic) {
+  const svg = document.getElementById(id);
+  if (!svg) return;
+  const pts = 60;
+  let d = 'M 0 29';
+  for (let i = 1; i <= pts; i++) {
+    const x = (i / pts) * 300;
+    let y;
+    if (authentic) {
+      y = 29 + Math.sin(i * .55 + Math.random() * .3) * 18 + Math.sin(i * .22) * 7;
+    } else {
+      y = 29 + Math.sin(i * .9) * 22 + (Math.random()-.5) * 14 + Math.sin(i * 2) * 5;
+    }
+    d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+  }
+  const c = authentic ? '#00E5FF' : '#FF6B6B';
+  svg.innerHTML = `
+    <path d="${d}" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+  `;
+}
+
+function initWaveforms() {
+  drawWave('wv-auth', true);
+  drawWave('wv-fake', false);
+  setInterval(() => { drawWave('wv-auth', true); drawWave('wv-fake', false); }, 2200);
+}
+
+/* ─────────────────────────────
+   MAGNETIC BUTTONS
+───────────────────────────── */
+function initMagnetic() {
+  document.querySelectorAll('.btn-hp, .btn-primary').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const r = btn.getBoundingClientRect();
+      const x = e.clientX - r.left - r.width  / 2;
+      const y = e.clientY - r.top  - r.height / 2;
+      btn.style.transform = `translate(${x*.18}px, ${y*.18}px)`;
+    });
+    btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+  });
+}
+</script>
+</body>
+</html>
